@@ -14,7 +14,7 @@ Knowledge base for Azure concepts, organized by domain.
 ├── compute/                      # VMs, App Service, Functions, Container Apps
 ├── security/                     # Key Vault, Defender, Certificates
 ├── monitoring-and-observability/ # Monitor, App Insights, Log Analytics
-├── devops/                       # Azure DevOps, DORA Metrics, Pipelines
+├── devops/                       # CI/CD concepts, DORA Metrics, Pipelines
 └── governance/                   # Policy, Management Groups, Cost Management
 ```
 
