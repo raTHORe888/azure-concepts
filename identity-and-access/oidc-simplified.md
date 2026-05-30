@@ -322,6 +322,148 @@ For Azure-hosted applications, keep the following configuration aligned:
 
 ---
 
+## Step-by-Step: Test This in Azure
+
+### Prerequisites
+- Azure CLI authenticated
+- An app registration with a redirect URI configured for local testing
+- `curl`, `python3`, and a browser available
+
+### Step 1 — Create an App Registration for OIDC
+```bash
+# Register app
+az ad app create \
+  --display-name "test-oidc-learning" \
+  --sign-in-audience "AzureADMyOrg" \
+  --web-redirect-uris "http://localhost:8080/callback"
+
+APP_ID=$(az ad app list --display-name "test-oidc-learning" --query "[0].appId" -o tsv)
+TENANT_ID=$(az account show --query tenantId -o tsv)
+echo "Client ID: $APP_ID"
+echo "Tenant ID: $TENANT_ID"
+```
+**Verify:** App created with the redirect URI. Note both IDs.
+
+### Step 2 — Build the authorization URL (Authorization Code + PKCE)
+```python
+import base64, hashlib, os, urllib.parse
+
+# Generate PKCE verifier and challenge
+code_verifier = base64.urlsafe_b64encode(os.urandom(32)).rstrip(b'=').decode()
+code_challenge = base64.urlsafe_b64encode(
+    hashlib.sha256(code_verifier.encode()).digest()
+).rstrip(b'=').decode()
+
+state = base64.urlsafe_b64encode(os.urandom(16)).rstrip(b'=').decode()
+nonce = base64.urlsafe_b64encode(os.urandom(16)).rstrip(b'=').decode()
+
+params = {
+    "client_id": "<APP_ID>",
+    "response_type": "code",
+    "redirect_uri": "http://localhost:8080/callback",
+    "scope": "openid profile email",
+    "state": state,
+    "nonce": nonce,
+    "code_challenge": code_challenge,
+    "code_challenge_method": "S256"
+}
+
+base_url = "https://login.microsoftonline.com/<TENANT_ID>/oauth2/v2.0/authorize"
+print(base_url + "?" + urllib.parse.urlencode(params))
+print("\nSave these:")
+print(f"code_verifier: {code_verifier}")
+print(f"state: {state}")
+print(f"nonce: {nonce}")
+```
+Open the printed URL in a browser. Sign in with your account.
+
+**Verify:** After sign-in, browser redirects to `http://localhost:8080/callback?code=...&state=...`.
+
+### Step 3 — Verify state parameter
+Extract `state` from the callback URL. Confirm it matches the `state` value you generated in step 2.
+
+**Verify:** If state doesn't match, reject the callback — this prevents CSRF.
+
+### Step 4 — Exchange the authorization code for tokens
+```bash
+CODE=<code from callback URL>
+CODE_VERIFIER=<code_verifier from step 2>
+
+curl -s -X POST \
+  "https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=$APP_ID" \
+  -d "grant_type=authorization_code" \
+  -d "code=$CODE" \
+  -d "redirect_uri=http://localhost:8080/callback" \
+  -d "code_verifier=$CODE_VERIFIER" \
+  -d "scope=openid profile email"
+```
+**Verify:** Response contains `id_token`, `access_token`, and `refresh_token`.
+
+### Step 5 — Validate the ID token claims
+Copy the `id_token` value and decode at jwt.ms.
+
+**Check these claims:**
+| Claim | What to verify |
+|---|---|
+| `iss` | Matches `https://login.microsoftonline.com/<tenantId>/v2.0` |
+| `aud` | Matches your `APP_ID` |
+| `nonce` | Matches the nonce from step 2 |
+| `exp` | Is in the future |
+| `sub` | Unique user identifier (opaque GUID) |
+| `email` | User's email if `email` scope was included |
+
+### Step 6 — Negative test: tampered code
+```bash
+# Use a garbage code_verifier — server should reject
+curl -s -X POST \
+  "https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=$APP_ID&grant_type=authorization_code&code=$CODE&redirect_uri=http://localhost:8080/callback&code_verifier=wrong_verifier"
+```
+**Verify:** Returns `error: invalid_grant` — PKCE verification failed.
+
+### Step 7 — Negative test: replay the same code
+```bash
+# Try the same code exchange again after step 4 succeeded
+curl -s -X POST \
+  "https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=$APP_ID&grant_type=authorization_code&code=$CODE&redirect_uri=http://localhost:8080/callback&code_verifier=$CODE_VERIFIER"
+```
+**Verify:** Returns `error: invalid_grant` — authorization codes are single-use.
+
+### Step 8 — Fetch JWKS and verify token signing key
+```bash
+# Fetch the OIDC discovery document
+curl -s "https://login.microsoftonline.com/$TENANT_ID/v2.0/.well-known/openid-configuration" | python3 -m json.tool | head -20
+
+# Fetch the JWKS
+curl -s "https://login.microsoftonline.com/$TENANT_ID/discovery/v2.0/keys" | python3 -m json.tool
+```
+**Verify:** JWKS contains public keys with `kid` values. The `kid` in your ID token header should match one of these keys.
+
+### Step 9 — Clean up
+```bash
+APP_OBJECT_ID=$(az ad app list --display-name "test-oidc-learning" --query "[0].id" -o tsv)
+az ad app delete --id $APP_OBJECT_ID
+```
+
+### What to Confirm End-to-End
+| Check | Expected |
+|---|---|
+| Authorization URL redirects to login | Yes |
+| State in callback matches generated state | Yes |
+| Code + PKCE verifier exchange returns tokens | Yes |
+| ID token `aud` matches client ID | Yes |
+| ID token `nonce` matches generated nonce | Yes |
+| Wrong `code_verifier` → `invalid_grant` | Yes |
+| Replayed code → `invalid_grant` | Yes |
+| JWKS `kid` matches token header | Yes |
+
+---
+
 ## Summary
 OIDC adds a secure identity layer to OAuth 2.0. A robust implementation requires:
 - Authorization Code + PKCE

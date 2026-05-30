@@ -105,6 +105,124 @@ sequenceDiagram
 
 ---
 
+## Step-by-Step: Test This in Azure
+
+### Prerequisites
+- Azure CLI authenticated
+- A GitHub repository (or any OIDC-capable platform) to simulate the workload token
+- Azure subscription with permission to create app registrations and role assignments
+
+### Step 1 — Create an App Registration for the workload
+```bash
+az ad app create --display-name "test-wif-learning"
+APP_ID=$(az ad app list --display-name "test-wif-learning" --query "[0].appId" -o tsv)
+SP_OBJECT_ID=$(az ad sp create --id $APP_ID --query id -o tsv)
+echo "App ID: $APP_ID"
+echo "SP Object ID: $SP_OBJECT_ID"
+```
+**Verify:** Both IDs are printed without errors.
+
+### Step 2 — Add a federated credential (trust GitHub Actions)
+```bash
+# Replace with your actual GitHub org/repo and branch
+az ad app federated-credential create \
+  --id $APP_ID \
+  --parameters '{
+    "name": "github-main-branch",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:<your-github-org>/<your-repo>:ref:refs/heads/main",
+    "audiences": ["api://AzureADTokenExchange"]
+  }'
+```
+**Verify:** Federated credential created with the exact `issuer`, `subject`, `audiences`.
+
+### Step 3 — Assign a role to the SP
+```bash
+SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+az role assignment create \
+  --assignee $SP_OBJECT_ID \
+  --role "Reader" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID"
+```
+**Verify:** Role assignment created with `principalType: ServicePrincipal`.
+
+### Step 4 — Configure GitHub Actions workflow to use the federated identity
+In your GitHub repo, create `.github/workflows/test-wif.yml`:
+```yaml
+name: Test WIF
+on: [push]
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - run: az group list --query "[].name" -o table
+```
+Set GitHub Secrets: `AZURE_CLIENT_ID=$APP_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
+
+**Verify:** Workflow runs and lists resource groups — no client secret was used.
+
+### Step 5 — Positive test: confirm token exchange works
+In the GitHub Actions log, you should see:
+- Login step succeeds
+- `az group list` returns results
+- No credentials stored
+
+### Step 6 — Negative test: wrong subject
+```bash
+# Create a federated credential with wrong subject
+az ad app federated-credential create \
+  --id $APP_ID \
+  --parameters '{
+    "name": "wrong-subject",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:wrong-org/wrong-repo:ref:refs/heads/main",
+    "audiences": ["api://AzureADTokenExchange"]
+  }'
+```
+Trigger the workflow again after removing the correct credential — login step will fail with token exchange error.
+
+### Step 7 — Negative test: missing RBAC
+```bash
+# Remove the Reader role
+az role assignment delete \
+  --assignee $SP_OBJECT_ID \
+  --role "Reader" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID"
+```
+Trigger the workflow — login succeeds (auth works) but `az group list` returns empty or `AuthorizationFailed`.
+
+### Step 8 — Inspect federated credentials
+```bash
+az ad app federated-credential list --id $APP_ID -o table
+```
+**Verify:** All configured trust mappings are visible with their `issuer`, `subject`, `audiences`.
+
+### Step 9 — Clean up
+```bash
+az ad app delete --id $APP_ID
+```
+
+### What to Confirm End-to-End
+| Check | Expected |
+|---|---|
+| Federated credential created | Yes |
+| GitHub Actions login without secret | Yes |
+| Resource access with Reader role works | Yes |
+| Wrong subject → token exchange fails | Yes |
+| Missing role → auth passes, action fails | Yes |
+| Deleting app removes all trust config | Yes |
+
+---
+
 ## Test Plan
 
 ## Positive tests

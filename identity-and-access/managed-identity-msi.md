@@ -113,6 +113,139 @@ flowchart TD
 
 ---
 
+## Step-by-Step: Test This in Azure
+
+### Prerequisites
+- Azure CLI authenticated
+- A resource group (e.g. `rg-msi-test`)
+- Permissions to create VMs or App Service plans
+
+### Step 1 — Create a VM with system-assigned managed identity
+```bash
+az group create --name rg-msi-test --location eastus
+
+az vm create \
+  --resource-group rg-msi-test \
+  --name msi-test-vm \
+  --image Ubuntu2204 \
+  --assign-identity \
+  --admin-username azureuser \
+  --generate-ssh-keys \
+  --size Standard_B1s
+```
+**Verify:** Output includes `"identity": {"type": "SystemAssigned", "principalId": "<guid>"}` — the GUID is the MI object ID.
+
+### Step 2 — Assign a Reader role to the managed identity
+```bash
+MI_PRINCIPAL_ID=$(az vm show \
+  --resource-group rg-msi-test \
+  --name msi-test-vm \
+  --query identity.principalId -o tsv)
+
+SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+az role assignment create \
+  --assignee $MI_PRINCIPAL_ID \
+  --role "Reader" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID"
+```
+**Verify:** Assignment created with `principalType: ServicePrincipal`.
+
+### Step 3 — SSH into the VM and fetch an identity token
+```bash
+# Get VM's public IP
+VM_IP=$(az vm show -d -g rg-msi-test -n msi-test-vm --query publicIps -o tsv)
+ssh azureuser@$VM_IP
+
+# Inside the VM — call IMDS (Instance Metadata Service) endpoint
+curl -s -H "Metadata: true" \
+  "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/"
+```
+**Verify:** Response contains `access_token` and `expires_on`. No credentials used.
+
+### Step 4 — Use the token to call Azure Resource Manager
+```bash
+# Still inside the VM
+SUBSCRIPTION_ID=<your-subscription-id>
+
+TOKEN=$(curl -s -H "Metadata: true" \
+  "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+curl -s \
+  -H "Authorization: Bearer $TOKEN" \
+  "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourcegroups?api-version=2021-04-01" \
+  | python3 -m json.tool | head -30
+```
+**Verify:** Resource groups returned in JSON — no password or secret used anywhere.
+
+### Step 5 — Negative test: wrong audience
+```bash
+# Request token for wrong audience (Key Vault instead of ARM)
+curl -s -H "Metadata: true" \
+  "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net"
+
+# Try using it to call ARM — should fail
+TOKEN_KV=<access_token from above>
+curl -s \
+  -H "Authorization: Bearer $TOKEN_KV" \
+  "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourcegroups?api-version=2021-04-01"
+```
+**Verify:** ARM returns `401 Unauthorized` — audience mismatch.
+
+### Step 6 — Negative test: insufficient permissions
+```bash
+# Remove Reader role from the MI
+az role assignment delete \
+  --assignee $MI_PRINCIPAL_ID \
+  --role "Reader" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID"
+
+# Wait ~30 seconds for propagation, then retry inside VM
+curl -s \
+  -H "Authorization: Bearer $TOKEN" \
+  "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourcegroups?api-version=2021-04-01"
+```
+**Verify:** Returns `403 Forbidden` — token still valid but no authorization.
+
+### Step 7 — Test user-assigned managed identity (bonus)
+```bash
+# Create user-assigned identity
+az identity create --name msi-user-assigned --resource-group rg-msi-test
+UAMI_ID=$(az identity show -g rg-msi-test -n msi-user-assigned --query id -o tsv)
+UAMI_PRINCIPAL=$(az identity show -g rg-msi-test -n msi-user-assigned --query principalId -o tsv)
+
+# Assign it to the VM alongside the system-assigned one
+az vm identity assign \
+  --resource-group rg-msi-test \
+  --name msi-test-vm \
+  --identities $UAMI_ID
+
+# Grant Reader role
+az role assignment create \
+  --assignee $UAMI_PRINCIPAL \
+  --role "Reader" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID"
+```
+**Verify:** VM now has both system-assigned and user-assigned identities.
+
+### Step 8 — Clean up
+```bash
+az group delete --name rg-msi-test --yes --no-wait
+```
+
+### What to Confirm End-to-End
+| Check | Expected |
+|---|---|
+| IMDS endpoint returns token | Yes |
+| Token has no credentials in request | Yes |
+| ARM call with valid token succeeds | Yes |
+| Wrong audience → 401 | Yes |
+| Removed role → 403 | Yes |
+| User-assigned MI can coexist with system-assigned | Yes |
+
+---
+
 ## How to Test (Beginner Friendly)
 
 ## Test A: Authentication works

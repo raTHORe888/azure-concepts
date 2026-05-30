@@ -279,3 +279,115 @@ sequenceDiagram
 - **Web/mobile + APIs:** OIDC + OAuth2 (Authorization Code + PKCE), Bearer access tokens, centralized SSO.
 - **Microservices:** short-lived JWT access tokens with strong validation and key rotation.
 - **Legacy/small tools:** Basic Auth only as temporary or constrained solution, always over HTTPS.
+
+---
+
+## Step-by-Step: Test This in Azure
+
+### Prerequisites
+- Azure CLI authenticated
+- `curl` and `python3` installed
+- An existing app registration (or create one with `az ad app create --display-name "test-auth-learning" --sign-in-audience AzureADMyOrg`)
+
+### Part A — Bearer Token (JWT)
+
+#### Step 1 — Get a Bearer token using client credentials
+```bash
+APP_ID=<your-app-id>
+SECRET=$(az ad app credential reset --id $APP_ID --query password -o tsv)
+TENANT_ID=$(az account show --query tenantId -o tsv)
+
+curl -s -X POST \
+  "https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=$APP_ID&client_secret=$SECRET&scope=https://management.azure.com/.default&grant_type=client_credentials"
+```
+**Verify:** Response includes `access_token`, `token_type: Bearer`, `expires_in`.
+
+#### Step 2 — Decode and inspect JWT claims
+Copy the `access_token` and decode at jwt.ms or via Python:
+```python
+import base64, json
+
+token = "<access_token>"
+parts = token.split(".")
+
+# Decode header
+header = json.loads(base64.urlsafe_b64decode(parts[0] + "=="))
+print("Header:", json.dumps(header, indent=2))
+
+# Decode payload
+payload = json.loads(base64.urlsafe_b64decode(parts[1] + "=="))
+print("Payload claims:", json.dumps(payload, indent=2))
+```
+**Verify in payload:** `iss`, `aud`, `exp`, `nbf`, `appid`, `tid` are all present.
+
+#### Step 3 — Use the Bearer token to call an API
+```bash
+TOKEN=<access_token from step 1>
+SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+curl -s \
+  -H "Authorization: Bearer $TOKEN" \
+  "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourcegroups?api-version=2021-04-01" \
+  | python3 -m json.tool | head -20
+```
+**Verify:** Resource groups returned. Remove the `Authorization` header and retry — expect `401 Unauthorized`.
+
+#### Step 4 — Negative test: expired token
+Wait for the token to expire (`expires_in` seconds) or modify `exp` claim manually, then retry step 3.
+**Verify:** Returns `401 Unauthorized` with `WWW-Authenticate` header.
+
+#### Step 5 — Negative test: wrong audience token
+```bash
+# Get token for Graph (wrong audience for ARM)
+GRAPH_TOKEN=$(curl -s -X POST \
+  "https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=$APP_ID&client_secret=$SECRET&scope=https://graph.microsoft.com/.default&grant_type=client_credentials" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+# Use Graph token to call ARM — should fail
+curl -s \
+  -H "Authorization: Bearer $GRAPH_TOKEN" \
+  "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourcegroups?api-version=2021-04-01"
+```
+**Verify:** `401 Unauthorized` — wrong audience.
+
+---
+
+### Part B — SSO (Interactive Sign-In)
+
+#### Step 6 — Observe SSO in action
+1. Open **Azure Portal** in a browser and sign in.
+2. Open a new tab and go to **Outlook Web** (outlook.office.com).
+3. Confirm: no second login prompt appeared.
+
+**Why:** Both apps trust the same Entra ID token from step 1. The browser session cookie carries the SSO context.
+
+#### Step 7 — Confirm different tokens for different audiences
+```bash
+# Token for ARM
+curl -s -X POST "https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token" \
+  -d "client_id=$APP_ID&client_secret=$SECRET&scope=https://management.azure.com/.default&grant_type=client_credentials" \
+  | python3 -c "import sys,json,base64; t=json.load(sys.stdin)['access_token']; p=t.split('.')[1]; print('ARM aud:', json.loads(base64.urlsafe_b64decode(p+'=='))['aud'])"
+
+# Token for Graph
+curl -s -X POST "https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token" \
+  -d "client_id=$APP_ID&client_secret=$SECRET&scope=https://graph.microsoft.com/.default&grant_type=client_credentials" \
+  | python3 -c "import sys,json,base64; t=json.load(sys.stdin)['access_token']; p=t.split('.')[1]; print('Graph aud:', json.loads(base64.urlsafe_b64decode(p+'=='))['aud'])"
+```
+**Verify:** `ARM aud` is `https://management.azure.com/`, `Graph aud` is `https://graph.microsoft.com`. Different tokens for different services.
+
+---
+
+### What to Confirm End-to-End
+| Check | Expected |
+|---|---|
+| Bearer token contains `iss`, `aud`, `exp` | Yes |
+| Correct audience token → API call succeeds | Yes |
+| No Authorization header → 401 | Yes |
+| Expired token → 401 | Yes |
+| Wrong audience token → 401 | Yes |
+| SSO: second app doesn't prompt login | Yes |
+| Token audience differs per resource | Yes |
