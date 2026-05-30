@@ -136,6 +136,179 @@ flowchart LR
 
 ---
 
+## What Experienced Azure Engineers Watch For
+
+- **Effective permissions are cumulative** across direct assignments, group-based assignments, inherited assignments, and service-specific authorization layers
+- **Control-plane success does not imply data-plane success** — a principal can manage a storage account and still be unable to read blob contents
+- **Propagation delay is real** — new assignments can take time to become effective across ARM, portal, CLI, and data services
+- **Token freshness matters** — a user or workload may need a fresh token before new permissions show up in practice
+- **Group nesting and indirection increase troubleshooting complexity** — always trace the exact principal path that granted access
+- **RBAC is only one layer** — network rules, resource locks, Conditional Access, PIM activation, Key Vault permission mode, and service ACLs can still block access
+
+---
+
+## Effective Permissions in the Real World
+
+At runtime, Azure evaluates the principal's **effective permissions**, which can come from multiple places:
+
+| Source of permission | Example | Why it matters |
+| --- | --- | --- |
+| Direct assignment | User assigned `Reader` on a resource group | Simplest case to verify |
+| Group-based assignment | User is in a group assigned `Contributor` | Often forgotten during troubleshooting |
+| Inherited assignment | Role assigned at subscription, used at resource scope | Explains permissions that seem to appear indirectly |
+| PIM-activated role | User activated `Owner` temporarily | Access may disappear when activation expires |
+| Service-local model | SQL, Kubernetes, Key Vault, Storage data RBAC | ARM permissions alone may not be enough |
+| Deny assignment | Policy or system-protected resource denies action | Overrides otherwise valid allow permissions |
+
+```mermaid
+flowchart TD
+   P[Principal attempts action] --> A[Collect direct assignments]
+   A --> B[Collect group-based assignments]
+   B --> C[Collect inherited assignments from parent scopes]
+   C --> D[Check PIM activation state]
+   D --> E[Check deny assignments]
+   E --> F[Check target plane: control or data]
+   F --> G[Combine into effective permission decision]
+```
+
+---
+
+## Scope Design Strategy
+
+| Scope | Good use case | Common mistake |
+| --- | --- | --- |
+| Management Group | Platform governance, security audit roles, policy admins | Giving app identities broad access here |
+| Subscription | Central platform teams managing most resources | Assigning app workloads here out of convenience |
+| Resource Group | App team boundary, environment boundary | Mixing unrelated apps in one RG and over-sharing access |
+| Resource | Break-glass exceptions, highly sensitive resources | Overusing resource-level assignments and creating sprawl |
+
+**Pro rule of thumb:**
+- Human admin roles often live at **management group** or **subscription** scope
+- Application runtime roles should usually live at **resource group** or **resource** scope
+- High-churn workloads should avoid many one-off resource-level assignments unless automation manages them
+
+---
+
+## Built-In Role Selection Patterns
+
+| Scenario | Better role choice | Avoid if possible |
+| --- | --- | --- |
+| App reads blobs only | `Storage Blob Data Reader` | `Contributor` on storage account |
+| App reads secrets only | `Key Vault Secrets User` | `Key Vault Administrator` |
+| CI/CD deploys infrastructure | `Contributor` at target RG + `User Access Administrator` only if truly needed | `Owner` by default |
+| Security audit team reviews config | `Reader` or `Security Reader` | `Contributor` |
+| Ops team manages VMs but not IAM | `Virtual Machine Contributor` | `Owner` |
+| Backup operators need recovery actions | Service-specific backup role | Broad subscription contributor |
+
+This is the difference between **functional access** and **minimal blast radius**.
+
+---
+
+## Custom Role Design Guidance
+
+When creating custom roles, experienced teams avoid starting from zero. Instead they:
+
+1. Start from the closest built-in role
+2. Observe the exact failing operation in Activity Log or client error output
+3. Add the smallest set of missing `Actions` or `DataActions`
+4. Test at the narrowest scope first
+5. Keep `AssignableScopes` tight to avoid accidental reuse everywhere
+
+### Custom role anti-patterns
+- Adding wildcard `*` actions just to make it work
+- Combining unrelated service permissions into one giant custom role
+- Using one custom role across prod and dev with no scope discipline
+- Forgetting data-plane permissions and then compensating with overly broad control-plane roles
+
+---
+
+## Conditions and Fine-Grained Assignment Controls
+
+Azure RBAC supports **role assignment conditions** for some services, letting you restrict what a role can do beyond the role definition itself. A common example is limiting blob access to a specific container path pattern.
+
+| Capability | Why it matters |
+| --- | --- |
+| Assignment conditions | Restrict a granted role to specific resources or request attributes |
+| Delegated administration patterns | Limit who can assign roles and under what constraints |
+| Conditional data access | Reduce over-broad permissions without creating many custom roles |
+
+Use conditions when a built-in role is close, but still slightly too broad. This often avoids maintaining a complex custom role.
+
+---
+
+## PIM and Just-in-Time Access
+
+In mature Azure environments, permanent standing access is minimized using **Microsoft Entra Privileged Identity Management (PIM)**.
+
+```mermaid
+flowchart LR
+   ELIGIBLE[Eligible assignment] --> ACTIVATE[User activates role in PIM]
+   ACTIVATE --> APPROVAL[Approval / MFA / justification if required]
+   APPROVAL --> ACTIVE[Role active for limited duration]
+   ACTIVE --> EXPIRE[Activation expires automatically]
+```
+
+| Access model | Risk profile | Recommended for |
+| --- | --- | --- |
+| Permanent `Owner` | Highest risk | Emergency break-glass only |
+| Permanent `Contributor` | High risk | Small controlled environments only |
+| PIM eligible `Contributor` / `Owner` | Lower risk | Human administrators in production |
+| Non-human workload identities | Use least privilege RBAC, not PIM | Apps, automation, managed identities |
+
+---
+
+## Troubleshooting Like a Pro
+
+When access fails, check in this order:
+
+1. **Who is the principal really?**
+  - User? group member? service principal? managed identity? wrong tenant?
+2. **What exact operation failed?**
+  - ARM action? data-plane action? portal view? SDK call?
+3. **What scope was targeted?**
+  - Resource, resource group, subscription, or management group?
+4. **Does the token reflect fresh claims?**
+  - Re-authenticate or refresh token after assignment changes
+5. **Is there a deny assignment, policy effect, lock, firewall, or service ACL?**
+6. **Is the resource using RBAC or an older access model?**
+  - Example: Key Vault access policies vs RBAC mode
+
+| Symptom | Likely cause | What to check |
+| --- | --- | --- |
+| Portal shows resource but data read fails | Control-plane role only | Add service data-plane role |
+| CLI says unauthorized right after assignment | Propagation delay or stale token | Wait, re-login, retry |
+| Works for one user in group but not another | Group membership or token freshness | Confirm group membership and reissue token |
+| Access denied only in one region/service endpoint | Service-local auth layer or firewall | Check service networking and auth mode |
+| Role assignment exists but user still blocked | Deny assignment / policy / lock | Inspect inherited denies and policy effects |
+
+---
+
+## Service-Specific RBAC Nuances
+
+| Service | Nuance experienced teams watch for |
+| --- | --- |
+| Storage | `Reader` can view account config but cannot read blob data; needs blob data role |
+| Key Vault | Data access depends on vault permission model; RBAC and access policies differ |
+| AKS | Azure RBAC for ARM is separate from Kubernetes RBAC inside cluster |
+| SQL / PostgreSQL | Azure RBAC may manage the server, but database login/roles still govern actual data access |
+| Service Bus / Event Hubs | Management roles do not always grant send/receive data operations |
+| Managed Identity | Identity may authenticate successfully but still fail authorization without exact target role |
+
+---
+
+## Production RBAC Design Checklist
+
+- Separate **human admin access** from **application runtime access**
+- Prefer **group-based assignments** for humans and **direct assignments** for workloads
+- Keep prod, non-prod, and shared platform scopes clearly separated
+- Use **PIM** for privileged human roles in production
+- Prefer **service-specific built-in roles** before creating custom ones
+- Document every custom role with owning team and intended use case
+- Periodically review orphaned assignments for deleted apps, service principals, or guests
+- Test both **positive** and **negative** access paths before rollout
+
+---
+
 ## Practical Checklist
 
 - Role is assigned to the correct security principal
@@ -345,9 +518,11 @@ az role definition delete --name "Custom Storage Reader"
 | Assignment at subscription scope visible | Yes |
 | Custom role creation succeeds | Yes |
 | Scope isolation: RG role doesn't grant other RG access | Yes |
-| Role deletion removes access immediately | Yes |
+| Role deletion removes access after propagation / token refresh | Yes |
 
 ---
 
 ## Summary
-Azure RBAC is the foundation of all resource authorization. Understand principals, role definitions, and scope hierarchy first, then apply least privilege, check both planes, and use deny assignments when needed for strict access control.
+Azure RBAC is the foundation of all resource authorization, but production-grade access design goes beyond simple role assignment. The real work is understanding effective permissions, choosing the right scope, separating control plane from data plane, accounting for propagation and token behavior, and combining RBAC with PIM, policy, and service-specific authorization models.
+
+The most reliable RBAC designs are narrow in scope, explicit in intent, operationally reviewed, and tested with both success and failure paths before they ever reach production.
