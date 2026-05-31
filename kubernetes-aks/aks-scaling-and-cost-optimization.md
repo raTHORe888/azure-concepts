@@ -27,6 +27,36 @@ flowchart TD
     POOLS --> REVIEW[Monthly cost/perf review]
 ```
 
+## Detailed workflow (step-by-step)
+
+1. **Collect baseline metrics**
+    - Capture utilization and scaling events over peak and off-peak windows.
+2. **Right-size resources**
+    - Tune requests/limits to reduce waste and avoid CPU/memory throttling.
+3. **Configure HPA carefully**
+    - Set realistic min/max replicas and stabilization windows.
+4. **Configure Cluster Autoscaler**
+    - Define node pool min/max bounds and validate scale-up latency.
+5. **Use workload-aware pools**
+    - Run fault-tolerant workloads on spot pools where acceptable.
+6. **Review monthly**
+    - Compare spend and performance against SLO outcomes.
+
+## Sizing guardrails
+
+| Area | Recommended practice |
+|---|---|
+| Requests | Start from measured usage and iterate |
+| Limits | Keep burst headroom while preventing noisy-neighbor issues |
+| HPA metrics | Use CPU/memory and app metrics where possible |
+| Spot pools | Use for stateless and interruption-tolerant workloads |
+
+## Common mistakes
+
+- Enabling HPA without valid resource requests.
+- Large limits causing node pressure during bursts.
+- No separation between critical and non-critical workloads.
+
 ## Portal checks
 1. AKS -> **Insights**: CPU/memory trends, node utilization
 2. AKS -> **Node pools**: autoscaling min/max
@@ -50,3 +80,8 @@ kubectl top pods -A
 - Low pending-pod incidents
 - Predictable latency under load
 - Cost decreases without SLO regressions
+
+## Public references
+- Microsoft Learn: Autoscaling in AKS
+- Microsoft Learn: AKS cost optimization guidance
+- Kubernetes docs: Resource requests and limits

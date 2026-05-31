@@ -37,6 +37,34 @@ flowchart TD
     OBS --> ROLL[Gradual rollout]
 ```
 
+## Detailed workflow (step-by-step)
+
+1. **Define primary objective**
+    - mTLS, advanced routing, canary control, or telemetry improvement.
+2. **Select mesh type**
+    - Istio for advanced policies; Linkerd for operational simplicity.
+3. **Pilot one namespace first**
+    - Enable injection and baseline latency/error metrics.
+4. **Apply security controls first**
+    - Validate mTLS posture and service-to-service policy behavior.
+5. **Add traffic policies**
+    - Configure retries/timeouts/canary weights and monitor impact.
+6. **Roll out in phases**
+    - Expand namespace-by-namespace with clear success criteria.
+
+## Mesh adoption checklist
+
+- Baseline p95 latency and error rate captured before rollout.
+- mTLS validation completed for pilot namespace.
+- Rollback approach documented.
+- On-call team trained on mesh troubleshooting.
+
+## Common mistakes
+
+- Enabling retries without timeout budgets.
+- Rolling out cluster-wide before pilot validation.
+- No observability baseline before policy changes.
+
 ## Portal checks
 1. AKS add-ons/integrations status (if using managed integrations)
 2. Cluster workload latency/error trends in Insights
@@ -60,3 +88,8 @@ linkerd viz stat deploy -A
 - mTLS enforced for critical namespaces
 - Canary and retry policies centrally managed
 - Incident triage faster via service-level telemetry
+
+## Public references
+- Istio public documentation
+- Linkerd public documentation
+- Microsoft Learn: AKS service mesh guidance

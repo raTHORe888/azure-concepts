@@ -29,6 +29,35 @@ flowchart TD
     RUNBOOK --> REVIEW[Incident postmortem improvements]
 ```
 
+## Detailed workflow (step-by-step)
+
+1. **Define SLOs first**
+    - Set clear targets for availability, latency, and error rate.
+2. **Instrument platform and applications**
+    - Capture node/pod metrics plus application-level telemetry.
+3. **Build layered dashboards**
+    - Cluster -> namespace -> workload/service drill-down.
+4. **Create actionable alerts**
+    - Alert on symptoms requiring action, not on every metric fluctuation.
+5. **Attach runbooks to alerts**
+    - Reduce response time by linking diagnostics steps.
+6. **Tune continuously**
+    - Remove alert noise and improve signal quality after incidents.
+
+## Minimum alert set
+
+- Node NotReady
+- Pod restart spikes
+- High 5xx or API failure rate
+- SLO burn rate alerts
+- Sustained pending pods
+
+## Common mistakes
+
+- Too many low-value alerts with no owner.
+- Dashboards that lack service-level context.
+- No correlation path across logs, metrics, and traces.
+
 ## Portal checks
 1. AKS -> **Insights** enabled and collecting
 2. Log Analytics workspace connected
@@ -50,3 +79,8 @@ kubectl get events -A --sort-by=.lastTimestamp
 ## What good looks like
 - Alerts fire early and with low noise
 - Dashboards allow fast triage from cluster to pod level
+
+## Public references
+- Microsoft Learn: Monitor AKS with Azure Monitor and Container Insights
+- Microsoft Learn: Application Insights and OpenTelemetry
+- Public SRE guidance on SLO-based alerting

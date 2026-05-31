@@ -29,6 +29,35 @@ flowchart TD
     NET --> AUDIT[Enable audit/defender/alerts]
 ```
 
+## Detailed workflow (step-by-step)
+
+1. **Harden cluster access**
+    - Review RBAC assignments and remove unnecessary admin-level permissions.
+2. **Use workload identity for Azure access**
+    - Avoid long-lived credentials in Kubernetes manifests.
+3. **Apply admission guardrails**
+    - Enforce Pod Security Standards and policy controls.
+4. **Constrain network paths**
+    - Add NetworkPolicy and controlled egress design.
+5. **Harden runtime defaults**
+    - Prefer non-root containers and minimal Linux capabilities.
+6. **Continuously monitor**
+    - Track policy violations and privileged workload attempts.
+
+## Security baseline checklist
+
+- Least-privilege role assignments for humans and workloads.
+- No plaintext secrets in application manifests.
+- Workload identity used for Azure service access.
+- Policy validation in CI before deployment.
+- Audit signals enabled for identity and cluster changes.
+
+## Common mistakes
+
+- Overly broad IAM scope assignments.
+- Treating perimeter controls as enough without in-cluster policy.
+- Applying security controls only in production.
+
 ## Portal checks
 1. AKS -> **Access control (IAM)** and **Azure RBAC for Kubernetes**
 2. AKS -> **Security** / Defender recommendations
@@ -51,3 +80,8 @@ kubectl get sa -A -o jsonpath='{range .items[*]}{.metadata.namespace}{"/"}{.meta
 - No long-lived secrets in pods
 - Least privilege enforced for both human and workload identities
 - Policy violations blocked before deployment
+
+## Public references
+- Microsoft Learn: AKS security baseline
+- Microsoft Learn: Workload identity on AKS
+- Microsoft Learn: Kubernetes and Azure RBAC on AKS

@@ -27,6 +27,36 @@ flowchart TD
     INGRESS --> TEST[Test DNS, east-west, north-south]
 ```
 
+## Detailed workflow (step-by-step)
+
+1. **Plan address space first**
+    - Ensure pod/service CIDRs do not overlap with VNet, peered networks, or on-prem.
+2. **Choose network plugin deliberately**
+    - Select based on IP planning complexity, scale, and governance model.
+3. **Define outbound path**
+    - Decide if outbound internet should go directly, via NAT Gateway, or through Firewall.
+4. **Design ingress architecture**
+    - Select ingress option based on TLS, WAF, and path/host routing needs.
+5. **Validate service discovery**
+    - Confirm DNS resolution in each namespace and node pool.
+6. **Run full path tests**
+    - Validate pod-to-pod, pod-to-service, and pod-to-external flows.
+
+## CNI choice quick guide
+
+| Decision point | Practical guidance |
+|---|---|
+| Simpler IP management | Prefer Azure CNI Overlay |
+| Direct VNet IP per pod | Consider Azure CNI |
+| Strong egress governance | Use NAT/Firewall + explicit routes |
+
+## Common failure patterns
+
+- IP exhaustion due to poor CIDR/subnet sizing.
+- DNS instability from CoreDNS pressure.
+- Egress blocks due to NSG/UDR/firewall mismatch.
+- Ingress healthy but backend endpoints missing.
+
 ## Portal checks
 1. AKS -> **Networking**: plugin mode, service CIDR, DNS service IP
 2. AKS -> **Node pools**: subnet mapping
@@ -52,3 +82,8 @@ kubectl get svc,endpoints -A
 - No IP exhaustion warnings
 - DNS stable under scale
 - Egress path deterministic and observable
+
+## Public references
+- Microsoft Learn: AKS networking concepts
+- Microsoft Learn: Azure CNI Overlay and Azure CNI
+- Microsoft Learn: AKS outbound connectivity options

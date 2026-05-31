@@ -30,6 +30,34 @@ flowchart TD
     PROMOTE --> AUDIT[Audit and rollback from Git history]
 ```
 
+## Detailed workflow (step-by-step)
+
+1. **Design repository model**
+    - Separate application code and deployment manifests/charts clearly.
+2. **Define promotion strategy**
+    - Use explicit overlays/branches for dev, test, and production.
+3. **Add PR quality gates**
+    - Lint, schema validation, and policy checks before merge.
+4. **Configure reconciliation behavior**
+    - Set sync interval, drift policy, and health checks.
+5. **Protect production flows**
+    - Require approvals and avoid direct runtime edits.
+6. **Practice rollback**
+    - Revert commit and verify automatic reconciliation.
+
+## Operational controls checklist
+
+- No direct production `kubectl apply` outside emergencies.
+- Every deployment traceable to PR and commit SHA.
+- Drift detection and alerting enabled.
+- Environment ownership and approval policy documented.
+
+## Common mistakes
+
+- Storing runtime secrets directly in Git-managed manifests.
+- Auto-sync with no safe promotion gates.
+- No separation between platform config and app config.
+
 ## Portal checks
 1. AKS cluster health and workload status
 2. Verify namespaces/apps deployed by GitOps controller
@@ -51,3 +79,8 @@ kubectl get events -A --sort-by=.lastTimestamp
 - No direct kubectl changes in prod
 - Every change traceable to PR and commit
 - Fast rollback by reverting Git commit
+
+## Public references
+- Argo CD public documentation
+- Flux public documentation
+- Microsoft Learn: GitOps on AKS guidance

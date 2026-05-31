@@ -30,6 +30,36 @@ flowchart TD
     SEC --> TEST[Validate scheduling and failover]
 ```
 
+## Detailed workflow (step-by-step)
+
+1. **Choose cluster boundaries**
+    - Decide if one cluster is enough or if multiple clusters are required by environment/compliance.
+2. **Create node pool strategy**
+    - Keep one **system** pool for cluster add-ons.
+    - Create **user** pools by workload type (general, compute-heavy, memory-heavy).
+3. **Place workloads intentionally**
+    - Use taints/tolerations and node selectors to isolate critical services.
+4. **Set scaling posture**
+    - Enable autoscaling for user pools and define min/max limits.
+5. **Add resilience controls**
+    - Distribute critical workloads across zones.
+6. **Validate operations readiness**
+    - Test drain, rollout, and failover behavior before production use.
+
+## Common mistakes to avoid
+
+- Running application pods on the system pool.
+- Keeping all workloads in one node pool.
+- No zone distribution for critical services.
+- Static node counts with no autoscaling.
+
+## Quick validation checklist
+
+- System and user pools are separate.
+- Critical workloads are pinned to intended pools.
+- Spread constraints exist for high-priority services.
+- Autoscaler bounds match expected traffic patterns.
+
 ## Portal checks
 1. Azure Portal -> Kubernetes services -> your AKS -> **Node pools**
 2. Confirm at least 1 **system** node pool and separate **user** node pool(s)
@@ -52,3 +82,9 @@ kubectl get nodes -L agentpool
 - System workloads isolated from app workloads
 - Autoscaling enabled for user pools
 - Zone-aware deployment for higher availability
+- Architecture validated in non-production before rollout
+
+## Public references
+- Microsoft Learn: AKS architecture and core concepts
+- Microsoft Learn: System and user node pools in AKS
+- Microsoft Learn: Availability zones guidance for AKS
