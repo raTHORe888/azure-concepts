@@ -2,6 +2,13 @@
 
 Detailed notes and workflows for Azure networking design and operations.
 
+## Documentation Safety and Source Policy
+
+- No hardcoded secrets, keys, tokens, passwords, or connection strings are included.
+- Examples use placeholders only (for example `<resource-group>`, `<vnet-name>`).
+- Explanations and guidance are derived from public Microsoft Azure documentation.
+- Do not store real credentials in docs or scripts.
+
 ## Topics
 
 1. [VNet, Subnetting, NSG, UDR, DNS, Private Endpoint](01-vnet-subnetting-nsg-udr-dns-private-endpoint.md)
