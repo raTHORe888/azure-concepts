@@ -1,5 +1,30 @@
 # AKS Workload Identity Integration
 
+## What is it?
+AKS Workload Identity is a secretless authentication model where a pod’s Kubernetes Service Account is federated to a Microsoft Entra application identity.
+
+## What is it used for?
+- Accessing Azure services (Key Vault, Storage, etc.) from pods
+- Avoiding client secrets in Kubernetes
+- Enforcing pod-level least privilege
+
+## Why is it important?
+It removes long-lived credentials from clusters and prevents identity sharing across unrelated pods.
+
+## Workflow
+```mermaid
+sequenceDiagram
+  participant Pod
+  participant OIDC as AKS OIDC Issuer
+  participant Entra as Microsoft Entra ID
+  participant Azure as Azure Resource
+
+  Pod->>OIDC: Get projected service account token
+  Pod->>Entra: Exchange token via federated credential
+  Entra-->>Pod: Short-lived access token
+  Pod->>Azure: Call resource with token
+```
+
 ## Background: The Problem
 
 When you run applications (workloads) on AKS, they often need to access Azure resources like Key Vault, Storage, SQL, etc. Traditionally, this was done using:

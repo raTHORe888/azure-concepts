@@ -1,5 +1,23 @@
 # OIDC Simplified
 
+## What is it?
+OIDC is an authentication layer on top of OAuth 2.0 that provides standard identity tokens and user claims.
+
+## What is it used for?
+It is used for modern login, SSO, and delegated identity in web, mobile, and API-based systems.
+
+## Why is it important?
+It standardizes secure identity exchange and reduces custom authentication logic across applications.
+
+## Workflow
+```mermaid
+flowchart LR
+  C[Client starts OIDC auth code flow] --> I[User authenticates at IdP]
+  I --> A[Authorization code returned]
+  A --> T[Client exchanges code for tokens]
+  T --> V[App validates ID token claims]
+```
+
 ## Overview
 OpenID Connect (OIDC) is an identity layer built on top of OAuth 2.0.
 

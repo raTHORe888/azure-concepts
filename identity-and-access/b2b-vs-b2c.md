@@ -1,5 +1,24 @@
 # B2B vs B2C — External Identities in Microsoft Entra ID
 
+## What is it?
+B2B and B2C are two external identity models: B2B for partner collaboration and B2C/External ID for customer-facing applications.
+
+## What is it used for?
+It is used to choose the right identity plane for guest users, vendors, and end-customer sign-up/sign-in journeys.
+
+## Why is it important?
+The wrong choice creates onboarding friction, governance gaps, and poor customer authentication experiences.
+
+## Workflow
+```mermaid
+flowchart TD
+    U[Identify external user type] --> Q{Partner or customer?}
+    Q -->|Partner| B[B2B guest collaboration]
+    Q -->|Customer| C[B2C/External ID user flows]
+    B --> P[Apply CA + RBAC]
+    C --> P2[Apply policies + app claims]
+```
+
 ## Overview
 
 Microsoft Entra ID offers two distinct models for handling identities that are **external to your organization** — i.e., not employees in your own tenant:

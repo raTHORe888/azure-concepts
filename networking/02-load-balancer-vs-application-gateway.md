@@ -1,5 +1,24 @@
 # Load Balancer vs Application Gateway
 
+## What is it?
+This is a design comparison between Azure Load Balancer (L4) and Application Gateway (L7) for inbound traffic distribution.
+
+## What is it used for?
+It is used to choose the right entry-point service based on protocol, routing intelligence, and security requirements.
+
+## Why is it important?
+Choosing the wrong gateway layer leads to avoidable latency, cost, and feature limitations in production.
+
+## Workflow
+```mermaid
+flowchart TD
+    I[Collect ingress requirements] --> Q{HTTP features needed?}
+    Q -->|No| L[Choose Load Balancer]
+    Q -->|Yes| A[Choose Application Gateway]
+    L --> V[Validate probes and ports]
+    A --> V2[Validate routing + WAF]
+```
+
 ## Overview
 
 Both distribute traffic, but they solve different problems:

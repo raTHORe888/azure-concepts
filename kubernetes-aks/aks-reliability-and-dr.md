@@ -1,5 +1,25 @@
 # AKS Reliability and Disaster Recovery
 
+## What is it?
+AKS reliability and DR is the design approach for keeping services available during node, zone, or region failures.
+
+## What is it used for?
+- Defining high availability controls
+- Planning backup/restore and failover strategy
+- Meeting target recovery metrics
+
+## Why is it important?
+It reduces outage impact and ensures workloads recover within target $RTO$ and $RPO$.
+
+## Workflow
+```mermaid
+flowchart TD
+    TARGETS[Define RTO/RPO] --> TOPO[Design zone/region topology]
+    TOPO --> DATA[Plan backup/replication]
+    DATA --> DRILL[Run failover drills]
+    DRILL --> UPDATE[Improve runbooks and controls]
+```
+
 ## Why this matters
 Production workloads need resilience against zone, node, and region failures.
 

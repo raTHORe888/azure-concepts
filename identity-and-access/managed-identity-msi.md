@@ -1,5 +1,23 @@
 # Managed Identity (MSI) on Azure — Beginner to Advanced
 
+## What is it?
+Managed Identity is an Entra identity automatically managed by Azure for Azure resources, with no credential storage in application code.
+
+## What is it used for?
+It is used for secure authentication from apps and services to Azure APIs like Key Vault, Storage, and databases.
+
+## Why is it important?
+It eliminates secret lifecycle overhead and improves security posture through short-lived token access.
+
+## Workflow
+```mermaid
+flowchart LR
+  E[Enable managed identity on resource] --> G[Grant RBAC permissions]
+  G --> T[Resource requests token from IMDS]
+  T --> S[Token sent to target service]
+  S --> X[Service authorizes operation]
+```
+
 ## What is MSI?
 Managed Identity (formerly called MSI) is an Azure feature that gives Azure resources an automatically managed identity in Microsoft Entra ID.
 

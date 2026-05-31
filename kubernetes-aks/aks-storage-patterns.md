@@ -1,5 +1,25 @@
 # AKS Storage Patterns
 
+## What is it?
+AKS storage patterns describe how persistent and ephemeral storage should be selected and operated for container workloads.
+
+## What is it used for?
+- Choosing correct CSI-backed storage
+- Designing PVC strategy for stateful apps
+- Planning backup/restore and data durability
+
+## Why is it important?
+Incorrect storage design causes data loss, poor performance, and unstable stateful workloads.
+
+## Workflow
+```mermaid
+flowchart TD
+    CLASSIFY[Classify workload state] --> CHOOSE[Choose Disk/Files/Ephemeral]
+    CHOOSE --> PVC[Define PVC and storage class]
+    PVC --> PROTECT[Set backup/restore]
+    PROTECT --> TEST[Test restart and failover behavior]
+```
+
 ## Why this matters
 Stateful workloads fail differently than stateless workloads. Correct storage pattern avoids data loss and downtime.
 

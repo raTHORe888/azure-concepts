@@ -1,5 +1,25 @@
 # AKS Ingress Controllers
 
+## What is it?
+AKS ingress is the layer that routes external HTTP/HTTPS traffic to internal Kubernetes services based on host/path rules.
+
+## What is it used for?
+- Exposing multiple apps behind one endpoint
+- Central TLS termination
+- Applying web traffic controls like WAF, redirects, and routing rules
+
+## Why is it important?
+It provides secure and controlled north-south traffic entry instead of exposing each service independently.
+
+## Workflow
+```mermaid
+flowchart LR
+  CLIENT[External client] --> INGRESS[Ingress Controller / Gateway]
+  INGRESS --> RULES[Host/Path rules]
+  RULES --> SVC[Service]
+  SVC --> PODS[Application pods]
+```
+
 ## The Problem: How Does External Traffic Reach Your Pods?
 
 In Kubernetes, pods are ephemeral and get new IPs constantly. Kubernetes **Services** (ClusterIP, NodePort, LoadBalancer) provide stable networking, but they have limitations when you need to expose **multiple HTTP services** to the outside world.

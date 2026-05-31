@@ -1,5 +1,26 @@
 # AKS Troubleshooting Playbooks
 
+## What is it?
+AKS troubleshooting playbooks are repeatable diagnosis and remediation steps for common production failures.
+
+## What is it used for?
+- Faster incident triage
+- Consistent root-cause analysis
+- Safer, minimal remediation during outages
+
+## Why is it important?
+It lowers mean time to recovery and prevents random trial-and-error during incidents.
+
+## Workflow
+```mermaid
+flowchart TD
+    ALERT[Incident alert] --> TRIAGE[Collect evidence]
+    TRIAGE --> CLASSIFY[Classify failure domain]
+    CLASSIFY --> FIX[Apply minimum safe fix]
+    FIX --> VERIFY[Validate recovery]
+    VERIFY --> PREVENT[Capture prevention action]
+```
+
 ## Why this matters
 Fast diagnosis reduces mean time to recovery (MTTR).
 

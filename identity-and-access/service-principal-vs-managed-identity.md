@@ -1,5 +1,24 @@
 # Service Principal vs Managed Identity
 
+## What is it?
+This topic compares two non-human Azure identities: service principals (credential-managed) and managed identities (platform-managed).
+
+## What is it used for?
+It is used to decide identity strategy for automation, applications, and Azure resource access.
+
+## Why is it important?
+The right selection reduces credential risk, operational overhead, and authorization misconfiguration.
+
+## Workflow
+```mermaid
+flowchart TD
+  W[Identify workload location] --> Z{Runs in Azure?}
+  Z -->|Yes| M[Use managed identity]
+  Z -->|No| S[Use service principal]
+  M --> R[Assign least-privilege RBAC]
+  S --> R2[Store/rotate credential securely]
+```
+
 ## Overview
 
 Both are non-human identities used by applications and workloads to access Azure resources. The key difference is how credentials are managed.

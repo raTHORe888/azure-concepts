@@ -1,5 +1,23 @@
 # Key Vault Access Patterns
 
+## What is it?
+Key Vault access patterns define how identities are authorized to manage vault resources and read/write secrets, keys, and certificates.
+
+## What is it used for?
+They are used to implement secure secret retrieval and key operations using Azure RBAC or legacy access policies.
+
+## Why is it important?
+Correct patterns prevent privilege confusion between control-plane and data-plane permissions and reduce secret exposure risk.
+
+## Workflow
+```mermaid
+flowchart LR
+  I[Choose identity type] --> M[Select RBAC or access policy model]
+  M --> R[Assign least-privilege roles]
+  R --> N[Validate network restrictions]
+  N --> A[Access secret/key/cert via app]
+```
+
 ## Overview
 
 Azure Key Vault stores and controls access to secrets, keys, and certificates. Controlling **who can access what inside a vault** is separate from controlling **who can manage the vault itself** — this distinction is the most common source of confusion when working with Key Vault.

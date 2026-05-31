@@ -1,5 +1,23 @@
 # Workload Identity Federation on Azure
 
+## What is it?
+Workload Identity Federation lets external or platform workloads exchange trusted OIDC tokens for Azure access tokens without long-lived secrets.
+
+## What is it used for?
+It is used in CI/CD and cross-platform workloads (for example GitHub Actions) to access Azure securely.
+
+## Why is it important?
+It removes static secret management while preserving strong, auditable trust boundaries.
+
+## Workflow
+```mermaid
+flowchart LR
+  J[External workload gets OIDC token] --> C[Token sent to Entra]
+  C --> F[Federated credential match]
+  F --> T[Azure access token issued]
+  T --> A[Workload calls Azure APIs]
+```
+
 ## Overview
 Workload Identity Federation (WIF) lets applications, automation jobs, and CI/CD workloads access Azure **without storing long-lived secrets**.
 

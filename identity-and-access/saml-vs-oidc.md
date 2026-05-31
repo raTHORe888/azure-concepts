@@ -1,5 +1,24 @@
 # SAML vs OIDC
 
+## What is it?
+SAML and OIDC are federation protocols for SSO, with SAML optimized for older enterprise web stacks and OIDC for modern apps/APIs.
+
+## What is it used for?
+It is used to choose the right protocol for integrating applications with identity providers.
+
+## Why is it important?
+Protocol choice affects implementation complexity, mobile/API compatibility, and long-term maintainability.
+
+## Workflow
+```mermaid
+flowchart TD
+  A[Assess app type and clients] --> D{Legacy enterprise web?}
+  D -->|Yes| S[Prefer SAML integration]
+  D -->|No| O[Prefer OIDC + OAuth2]
+  S --> V[Validate assertions and session]
+  O --> V2[Validate JWT tokens and claims]
+```
+
 ## Overview
 
 Both SAML and OIDC are federation protocols that enable Single Sign-On (SSO) — letting a user authenticate once at an Identity Provider (IdP) and access multiple applications without re-entering credentials. They differ significantly in design philosophy, token format, transport mechanism, and modern applicability.

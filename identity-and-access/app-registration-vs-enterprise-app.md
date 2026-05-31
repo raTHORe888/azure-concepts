@@ -1,5 +1,23 @@
 # App Registration vs Enterprise Application
 
+## What is it?
+This topic explains two Entra objects: the App Registration (application definition) and the Enterprise Application/service principal (tenant-local instance used at runtime).
+
+## What is it used for?
+It is used to correctly configure app authentication, API permissions, and tenant-level access assignments.
+
+## Why is it important?
+Confusing these objects causes broken sign-in, incorrect RBAC assignments, and permission troubleshooting delays.
+
+## Workflow
+```mermaid
+flowchart LR
+  D[Define app auth scenario] --> R[Create App Registration]
+  R --> S[Enterprise App created in tenant]
+  S --> C[Configure consent and assignments]
+  C --> A[Validate sign-in and access]
+```
+
 ## Overview
 When you register an application in Microsoft Entra ID, two objects are created:
 1. **App Registration** — the global definition of the application

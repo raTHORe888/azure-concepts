@@ -1,5 +1,23 @@
 # AKS Workload Identity and Pod Identity
 
+## What is it?
+AKS Workload Identity is the modern AKS-to-Entra authentication model that lets each pod use a federated identity instead of static credentials. Pod Identity is the older, now-deprecated approach.
+
+## What is it used for?
+It is used to let Kubernetes workloads securely call Azure services like Key Vault, Storage, and Service Bus with per-workload identities.
+
+## Why is it important?
+It removes secret sprawl, enforces least privilege per workload, and aligns AKS identity with short-lived token best practices.
+
+## Workflow
+```mermaid
+flowchart LR
+  P[Pod with service account] --> T[AKS OIDC token issued]
+  T --> F[Entra federated credential validation]
+  F --> A[Azure access token minted]
+  A --> R[Pod accesses Azure resource]
+```
+
 ## Overview
 
 Kubernetes workloads (pods) frequently need to authenticate to Azure services — Key Vault, Storage, Service Bus, databases, and more. The challenge is doing this **without embedding credentials** inside the container image, environment variables, or Kubernetes secrets.

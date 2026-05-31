@@ -1,5 +1,23 @@
 # Azure Networking Fundamentals
 
+## What is it?
+Azure Networking Fundamentals introduces foundational Azure connectivity concepts and how they interact with identity controls.
+
+## What is it used for?
+It is used as a baseline learning and implementation guide for designing reliable Azure network paths.
+
+## Why is it important?
+Strong fundamentals prevent recurring production outages and improve architecture decisions early.
+
+## Workflow
+```mermaid
+flowchart LR
+    B[Start with workload boundary] --> V[Design VNet/subnet plan]
+    V --> P[Apply security and routing]
+    P --> E[Enable private service access]
+    E --> O[Observe and tune operations]
+```
+
 ## Overview
 
 Azure networking is the backbone of every cloud application. Most real production incidents are a combination of:

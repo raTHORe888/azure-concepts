@@ -1,5 +1,23 @@
 # End-to-End Azure Network Design Workflow
 
+## What is it?
+This is a structured method for designing Azure network topology, segmentation, ingress/egress, and operational controls.
+
+## What is it used for?
+It is used to move from requirements to an implementation-ready network architecture for production workloads.
+
+## Why is it important?
+A repeatable workflow improves consistency, security posture, and delivery speed across environments.
+
+## Workflow
+```mermaid
+flowchart LR
+    R[Gather requirements] --> T[Design topology and IP plan]
+    T --> S[Define security and routing controls]
+    S --> V[Validate with test scenarios]
+    V --> D[Deploy and monitor]
+```
+
 ## Goal
 
 Provide a repeatable workflow for designing secure, scalable Azure networking for production workloads.

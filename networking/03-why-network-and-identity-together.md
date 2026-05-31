@@ -1,5 +1,23 @@
 # Why Network and Identity Must Be Designed Together
 
+## What is it?
+This topic explains the two-gate model where successful access requires both a valid network path and valid identity authorization.
+
+## What is it used for?
+It is used to troubleshoot and design secure systems by evaluating connectivity and permissions together.
+
+## Why is it important?
+Separating network and identity design creates blind spots that cause hard-to-diagnose access failures.
+
+## Workflow
+```mermaid
+flowchart LR
+    R[Request initiated] --> N[Check network path]
+    N --> I[Check identity/token]
+    I --> A[Evaluate RBAC/policy]
+    A --> O[Allow or deny access]
+```
+
 ## Core idea
 
 A secure request succeeds only when **both** are true:

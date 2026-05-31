@@ -1,5 +1,25 @@
 # AKS Security Hardening
 
+## What is it?
+AKS security hardening is a layered protection model across cluster access, workload identity, runtime policy, and network controls.
+
+## What is it used for?
+- Enforcing least privilege for users and workloads
+- Preventing risky pod/runtime configurations
+- Protecting secrets and sensitive resource access
+
+## Why is it important?
+It reduces attack surface and limits blast radius if a workload or credential is compromised.
+
+## Workflow
+```mermaid
+flowchart TD
+    ACCESS[Harden RBAC and access] --> ID[Enable workload identity]
+    ID --> POLICY[Enforce pod/admission policy]
+    POLICY --> NET[Restrict network paths]
+    NET --> AUDIT[Enable auditing and alerts]
+```
+
 ## Why this matters
 Security in AKS is layered: cluster access, workload identity, network boundaries, and runtime policy.
 

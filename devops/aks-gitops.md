@@ -1,5 +1,28 @@
 # AKS GitOps (Argo CD / Flux)
 
+## What is it?
+AKS GitOps is an operating model where the desired Kubernetes state is stored in Git and automatically reconciled to the AKS cluster by tools like Argo CD or Flux.
+
+## What is it used for?
+- Controlled and auditable deployments
+- Environment promotion (dev -> stage -> prod)
+- Drift detection and automatic reconciliation
+
+## Why is it important?
+It improves deployment reliability, reduces manual errors, and provides full change traceability through pull requests and commit history.
+
+## Workflow
+```mermaid
+flowchart LR
+    DEV[Developer change] --> PR[Pull Request]
+    PR --> GIT[Approved Git state]
+    GIT --> CTRL[Argo CD / Flux]
+    CTRL --> AKS[AKS cluster reconcile]
+    AKS --> DRIFT{Drift?}
+    DRIFT -->|Yes| FIX[Auto-reconcile]
+    DRIFT -->|No| OK[Healthy state]
+```
+
 ## Why this matters
 GitOps makes Kubernetes changes auditable, repeatable, and safer by making Git the source of truth.
 

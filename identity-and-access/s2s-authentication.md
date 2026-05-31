@@ -1,5 +1,23 @@
 # Service-to-Service (S2S) Authentication
 
+## What is it?
+S2S authentication is non-interactive authentication where one service proves its identity to another service.
+
+## What is it used for?
+It is used for API-to-API calls, background jobs, automation pipelines, and cloud-native microservice integrations.
+
+## Why is it important?
+It secures backend communication without user sessions and enables reliable machine identity controls.
+
+## Workflow
+```mermaid
+flowchart LR
+    C[Calling service identity] --> T[Request access token]
+    T --> V[Target service validates token]
+    V --> A[Authorize scopes/roles]
+    A --> R[Process request and respond]
+```
+
 ## Overview
 
 Service-to-Service (S2S) authentication is the pattern where **one backend service authenticates to another backend service** with no human user in the loop. There is no interactive login, no browser redirect, and no user consent — the calling service proves its own identity using a credential or token, and the receiving service validates that proof before allowing access.

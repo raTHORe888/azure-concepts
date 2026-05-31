@@ -1,5 +1,25 @@
 # AKS Architecture Basics
 
+## What is it?
+AKS architecture defines how the managed control plane, system node pool, and user node pools are designed and operated.
+
+## What is it used for?
+- Separating platform components from application workloads
+- Designing high availability and scaling boundaries
+- Planning upgrades and operational ownership
+
+## Why is it important?
+Good architecture avoids noisy-neighbor issues, improves reliability, and keeps cluster operations predictable.
+
+## Workflow
+```mermaid
+flowchart TD
+    PLAN[Define architecture] --> POOLS[Split system/user pools]
+    POOLS --> SCALE[Set autoscaling bounds]
+    SCALE --> RES[Add zone resilience]
+    RES --> VALIDATE[Validate workload placement]
+```
+
 ## Why this matters
 Understanding AKS architecture helps you design secure, scalable clusters and avoid production surprises.
 

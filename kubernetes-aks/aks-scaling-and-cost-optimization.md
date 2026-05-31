@@ -1,5 +1,25 @@
 # AKS Scaling and Cost Optimization
 
+## What is it?
+AKS scaling and cost optimization is the practice of balancing performance and availability with efficient resource usage.
+
+## What is it used for?
+- Auto-scaling pods and nodes
+- Right-sizing requests/limits
+- Reducing infrastructure cost without breaking SLOs
+
+## Why is it important?
+It prevents over-provisioning waste and under-provisioning outages at the same time.
+
+## Workflow
+```mermaid
+flowchart TD
+    BASE[Collect utilization baseline] --> SIZE[Right-size requests/limits]
+    SIZE --> HPA[Configure HPA]
+    HPA --> CA[Configure Cluster Autoscaler]
+    CA --> REVIEW[Review cost vs SLO monthly]
+```
+
 ## Why this matters
 You need enough capacity for reliability, but over-provisioning increases cloud spend.
 

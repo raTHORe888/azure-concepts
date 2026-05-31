@@ -1,5 +1,26 @@
 # AKS Networking Deep Dive
 
+## What is it?
+AKS networking defines how pods/services communicate internally and how traffic enters or exits the cluster.
+
+## What is it used for?
+- CNI model selection
+- DNS and service discovery stability
+- Ingress/egress path design and governance
+
+## Why is it important?
+Networking is a top failure domain in AKS; correct design prevents outages caused by IP exhaustion, routing errors, and blocked egress.
+
+## Workflow
+```mermaid
+flowchart TD
+    REQ[Collect app/network needs] --> CIDR[Plan CIDRs]
+    CIDR --> CNI[Choose CNI mode]
+    CNI --> EGR[Define outbound path]
+    EGR --> ING[Define ingress model]
+    ING --> TEST[Run end-to-end connectivity tests]
+```
+
 ## Why this matters
 Most AKS outages are networking issues: IP exhaustion, DNS resolution failure, NSG/UDR misconfiguration, or egress blocking.
 

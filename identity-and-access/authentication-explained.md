@@ -1,5 +1,23 @@
 # Authentication Explained
 
+## What is it?
+Authentication is the process of proving identity, while token-based protocols define how identity and access are represented across systems.
+
+## What is it used for?
+It is used to secure users, APIs, and service integrations using methods such as OAuth 2.0, OIDC, bearer tokens, and SSO.
+
+## Why is it important?
+Choosing the wrong auth model increases breach risk, weakens user experience, and complicates operations.
+
+## Workflow
+```mermaid
+flowchart LR
+  N[Identify client type] --> M[Choose auth mechanism]
+  M --> I[Issue token/credential]
+  I --> V[Validate identity and claims]
+  V --> E[Enforce access policy]
+```
+
 This note explains when to use:
 - Basic Authentication
 - Bearer Tokens

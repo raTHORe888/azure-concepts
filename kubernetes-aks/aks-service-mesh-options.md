@@ -1,5 +1,26 @@
 # AKS Service Mesh Options (Istio / Linkerd)
 
+## What is it?
+AKS service mesh is a dedicated traffic and security layer (usually sidecar-based) for service-to-service communication.
+
+## What is it used for?
+- mTLS between microservices
+- Centralized retry/timeout/canary policies
+- Improved service-to-service observability
+
+## Why is it important?
+It removes repeated networking logic from app code and standardizes security/traffic control.
+
+## Workflow
+```mermaid
+flowchart TD
+    NEED[Define mesh requirement] --> PICK[Choose Istio or Linkerd]
+    PICK --> PILOT[Pilot namespace rollout]
+    PILOT --> SEC[Validate mTLS and policy]
+    SEC --> TRAFFIC[Apply traffic controls]
+    TRAFFIC --> EXPAND[Expand rollout by namespace]
+```
+
 ## Why this matters
 As microservices grow, consistent traffic policy, mTLS, and observability become hard to maintain in app code.
 

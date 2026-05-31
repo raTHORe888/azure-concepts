@@ -1,5 +1,23 @@
 # Azure RBAC Deep Dive
 
+## What is it?
+Azure RBAC is Azure's authorization system that grants actions to identities at defined scopes through roles.
+
+## What is it used for?
+It is used to control management and data operations across subscriptions, resource groups, and individual resources.
+
+## Why is it important?
+It enforces least privilege, traceable access control, and auditable operations at scale.
+
+## Workflow
+```mermaid
+flowchart LR
+  P[Identify principal] --> D[Select role definition]
+  D --> S[Assign role at proper scope]
+  S --> E[Evaluate effective permissions]
+  E --> O[Perform authorized operation]
+```
+
 ## What is Azure RBAC?
 Azure Role-Based Access Control (RBAC) is the authorization system that controls who can do what on which Azure resources.
 

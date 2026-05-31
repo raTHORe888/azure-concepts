@@ -1,5 +1,25 @@
 # Communication Between Two AKS Services (Cross-Cluster)
 
+## What is it?
+Cross-cluster AKS communication is the pattern used when services running in different AKS clusters need private, secure connectivity.
+
+## What is it used for?
+- Service-to-service API calls across clusters
+- Multi-region or multi-environment architectures
+- Shared platform services consumed by separate clusters
+
+## Why is it important?
+It enables distributed architectures while preserving security, latency control, and operational boundaries.
+
+## Workflow
+```mermaid
+flowchart LR
+  A[Service A in Cluster 1] --> DNS[Private DNS / discovery]
+  DNS --> NET[Private network path]
+  NET --> AUTH[Identity and policy checks]
+  AUTH --> B[Service B in Cluster 2]
+```
+
 How do two services in two different AKS clusters communicate with each other?
 
 ## Overview

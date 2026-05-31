@@ -1,5 +1,26 @@
 # AKS Observability
 
+## What is it?
+AKS observability is the practice of monitoring metrics, logs, traces, and events to understand cluster and workload behavior.
+
+## What is it used for?
+- Detecting incidents early
+- Troubleshooting faster
+- Tracking SLO/SLA health and platform trends
+
+## Why is it important?
+Without observability, incidents are detected late and recovery time increases significantly.
+
+## Workflow
+```mermaid
+flowchart TD
+    SLO[Define SLOs] --> COLLECT[Collect metrics/logs/traces]
+    COLLECT --> DASH[Create dashboards]
+    DASH --> ALERT[Set alerts]
+    ALERT --> RUNBOOK[Attach runbooks]
+    RUNBOOK --> IMPROVE[Tune after incidents]
+```
+
 ## Why this matters
 Without observability, incidents take longer to detect and fix.
 

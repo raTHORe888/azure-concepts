@@ -1,5 +1,26 @@
 # AKS Upgrades and Release Strategy
 
+## What is it?
+AKS upgrades and release strategy is the process for safely updating Kubernetes versions, node images, and critical add-ons.
+
+## What is it used for?
+- Keeping clusters supported and secure
+- Reducing upgrade-related downtime
+- Standardizing change windows and rollback plans
+
+## Why is it important?
+Uncontrolled upgrades can break workloads; a staged strategy prevents broad service impact.
+
+## Workflow
+```mermaid
+flowchart TD
+    PRECHECK[Check support and compatibility] --> STAGE[Test in non-prod]
+    STAGE --> CP[Upgrade control plane]
+    CP --> POOLS[Upgrade node pools in waves]
+    POOLS --> VERIFY[Validate SLO and app health]
+    VERIFY --> CLOSE[Close change or rollback]
+```
+
 ## Why this matters
 Unplanned upgrades can cause downtime. Planned upgrades reduce risk and keep support compliance.
 

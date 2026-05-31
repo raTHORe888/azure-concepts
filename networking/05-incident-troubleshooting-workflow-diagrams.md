@@ -1,5 +1,23 @@
 # Azure Networking Incident Troubleshooting Workflow Diagrams
 
+## What is it?
+This topic is an incident response playbook for diagnosing Azure network faults using ordered decision steps.
+
+## What is it used for?
+It is used by operators to reduce MTTR for DNS, routing, NSG, private endpoint, and identity-adjacent issues.
+
+## Why is it important?
+A standard troubleshooting sequence avoids random trial-and-error and speeds safe recovery.
+
+## Workflow
+```mermaid
+flowchart LR
+    A[Alert received] --> S[Scope impact]
+    S --> D[Run DNS/path checks]
+    D --> C[Validate policy controls]
+    C --> F[Apply fix and verify]
+```
+
 ## Goal
 
 Use a structured, repeatable workflow to debug Azure networking incidents quickly.

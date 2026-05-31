@@ -1,5 +1,23 @@
 # Cross-Tenant Access Policies
 
+## What is it?
+Cross-Tenant Access Policies are Entra controls that define trust and access behavior between your tenant and partner tenants.
+
+## What is it used for?
+They are used to allow or block inbound/outbound B2B access and decide how MFA/device trust is handled across organizations.
+
+## Why is it important?
+They reduce collaboration risk by preventing over-trust while preserving secure partner access.
+
+## Workflow
+```mermaid
+flowchart LR
+  P[Select partner tenant] --> I[Set inbound rules]
+  I --> O[Set outbound rules]
+  O --> T[Configure trust settings]
+  T --> V[Test collaboration access]
+```
+
 ## Overview
 
 When organizations collaborate — sharing apps, resources, or data — identities from one Entra ID tenant need to be trusted by another. **Cross-Tenant Access Policies** (XTAP) give administrators fine-grained control over **which external tenants are trusted**, **which users from those tenants can access resources**, and **under what authentication conditions**.

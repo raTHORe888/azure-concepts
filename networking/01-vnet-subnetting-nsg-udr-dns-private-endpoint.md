@@ -1,5 +1,23 @@
 # VNet, Subnetting, NSG, UDR, DNS, and Private Endpoint
 
+## What is it?
+This topic covers the core Azure networking primitives that define private address space, traffic filtering, routing, name resolution, and private PaaS access.
+
+## What is it used for?
+It is used to design secure east-west and north-south connectivity for application tiers and managed services.
+
+## Why is it important?
+Most Azure connectivity outages are caused by misalignment across these six building blocks rather than application code.
+
+## Workflow
+```mermaid
+flowchart LR
+    C[Plan CIDR and subnets] --> F[Apply NSG rules]
+    F --> R[Configure UDR paths]
+    R --> D[Set DNS resolution]
+    D --> P[Attach private endpoints]
+```
+
 ## Overview
 
 These six concepts define how private connectivity works in Azure:
