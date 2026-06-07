@@ -8,6 +8,7 @@ Knowledge base for Azure concepts, organized by domain.
 ├── identity-and-access/          # Identity, authentication, managed identities, federation
 ├── networking/                    # NSG, Private Link, DNS, VNet, Load Balancers
 ├── kubernetes-aks/               # AKS, service communication, container registries
+├── caching/                      # Redis, Azure Cache for Redis, patterns
 ├── data-and-analytics/           # Kusto, Data Factory, Databricks, Synapse
 ├── storage/                      # Blob, Table, Queue, Files, Data Lake
 ├── messaging-and-integration/    # Service Bus, Event Grid, Event Hubs, Logic Apps

@@ -12,6 +12,7 @@ Azure Kubernetes Service and container orchestration concepts.
 ## Topics
 
 - [AKS Architecture Basics](aks-architecture-basics.md)
+- [Azure Arc: End-to-End Flow](azure-arc.md)
 - [AKS Networking Deep Dive](aks-networking-deep-dive.md)
 - [AKS Security Hardening](aks-security-hardening.md)
 - [AKS Ingress Controllers](aks-ingress.md)
@@ -29,16 +30,17 @@ Azure Kubernetes Service and container orchestration concepts.
 ## Learning Flow (Recommended)
 
 1. Architecture basics
-2. Networking deep dive
-3. Security hardening
-4. Workload identity
-5. Scaling and cost
-6. Observability
-7. GitOps and delivery governance
-8. Service mesh options
-9. Upgrades and DR
-10. Storage patterns
-11. Troubleshooting playbooks
+2. Azure Arc flow
+3. Networking deep dive
+4. Security hardening
+5. Workload identity
+6. Scaling and cost
+7. Observability
+8. GitOps and delivery governance
+9. Service mesh options
+10. Upgrades and DR
+11. Storage patterns
+12. Troubleshooting playbooks
 
 Each document includes:
 - concept explanation
